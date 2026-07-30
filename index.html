@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fechamento de Turno - Fardos de Algodão</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: auto; }
+        input, button { padding: 12px; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border-radius: 5px; }
+        input { border: 1px solid #ccc; }
+        button.add { background: #007bff; color: white; border: none; cursor: pointer; }
+        .results { background: #f4f4f4; padding: 15px; border-radius: 5px; margin-top: 20px; font-size: 18px; }
+        .results span { font-weight: bold; color: #333; }
+        button.clear { margin-top: 20px; background: #dc3545; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Relatório de Fardos</h2>
+    
+    <input type="number" id="pesoInput" placeholder="Digite o peso (ex: 200.5)" step="0.01">
+    <button class="add" onclick="adicionarFardo()">Adicionar Fardo (Enter)</button>
+
+    <div class="results">
+        <p>Qtd. Fardos: <span id="qtd">0</span></p>
+        <p>Peso Total: <span id="total">0.00</span> kg</p>
+        <p>Média: <span id="media">0.00</span> kg</p>
+    </div>
+
+    <button class="clear" onclick="limpar()">Zerar Turno</button>
+
+    <script>
+        let fardos = [];
+
+        // Adiciona o fardo ao pressionar a tecla Enter
+        document.getElementById('pesoInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') adicionarFardo();
+        });
+
+        function adicionarFardo() {
+            const input = document.getElementById('pesoInput');
+            const peso = parseFloat(input.value.replace(',', '.')); // Aceita vírgula ou ponto
+
+            if (isNaN(peso) || peso <= 0) return;
+
+            fardos.push(peso);
+            atualizarTela();
+            
+            input.value = ''; // Limpa o campo
+            input.focus(); // Mantém o cursor pronto para a próxima digitação
+        }
+
+        function atualizarTela() {
+            const qtd = fardos.length;
+            const total = fardos.reduce((acc, val) => acc + val, 0);
+            const media = qtd > 0 ? total / qtd : 0;
+
+            document.getElementById('qtd').innerText = qtd;
+            document.getElementById('total').innerText = total.toFixed(2);
+            document.getElementById('media').innerText = media.toFixed(2);
+        }
+
+        function limpar() {
+            if(confirm("Tem certeza que deseja zerar os dados para um novo turno?")) {
+                fardos = [];
+                atualizarTela();
+            }
+        }
+    </script>
+    <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(registration => {
+          console.log('ServiceWorker registrado com sucesso:', registration.scope);
+        })
+        .catch(error => {
+          console.log('Falha ao registrar o ServiceWorker:', error);
+        });
+    });
+  }
+</script>
+</body>
+</html>
