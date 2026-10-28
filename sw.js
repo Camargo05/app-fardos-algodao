@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fardos-app-v1';
+const CACHE_NAME = 'fardos-app-v2';
 const urlsToCache = [
   './',
   './index.html',
@@ -16,12 +16,18 @@ self.addEventListener('install', event => {
   );
 });
 
-// Intercepta as requisições e retorna o que está no cache (Offline first)
+// Intercepta as requisições
 self.addEventListener('fetch', event => {
+  // Se for uma requisição para o Supabase, busca sempre na rede (evita cache de dados)
+  if (event.request.url.includes('supabase.co')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Para o restante do app, usa a regra normal (Cache First)
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Se encontrou no cache, retorna o arquivo em cache. Se não, busca na rede.
         return response || fetch(event.request);
       })
   );
