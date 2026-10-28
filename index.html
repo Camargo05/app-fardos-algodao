@@ -3,54 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Fardos - Turno</title>
+    <title>Controle de Fardos - Algodão</title>
+    <!-- Fonte Google Inter para visual moderno -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: Arial, sans-serif; padding: 15px; max-width: 500px; margin: auto; background: #f9f9f9; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        input, button { padding: 12px; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border-radius: 5px; }
-        input { border: 1px solid #ccc; }
-        button.add { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
-        button.clear { background: #dc3545; color: white; border: none; cursor: pointer; }
-        .results { background: #e9ecef; padding: 10px 15px; border-radius: 5px; font-size: 16px; margin-bottom: 15px; }
-        .results span { font-weight: bold; color: #333; }
-        ul { list-style: none; padding: 0; max-height: 250px; overflow-y: auto; margin: 0; }
-        li { background: #f1f3f5; padding: 10px; margin-bottom: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
-        .actions button { padding: 5px 10px; font-size: 13px; width: auto; margin-left: 5px; cursor: pointer; }
-        .btn-edit { background: #ffc107; border: none; border-radius: 3px; }
-        .btn-del { background: #6c757d; color: white; border: none; border-radius: 3px; }
+        :root {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --warning: #f59e0b;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            background: var(--bg-color); 
+            color: var(--text-main); 
+            padding: 16px; 
+            max-width: 500px; 
+            margin: 0 auto; 
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        header h1 { font-size: 1.25rem; font-weight: 700; color: var(--text-main); }
+        
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 20px; 
+            border-radius: var(--radius); 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
+            margin-bottom: 16px; 
+            border: 1px solid var(--border);
+        }
+
+        .input-group { margin-bottom: 14px; }
+
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            font-size: 1.1rem; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            outline: none; 
+            background: #f8fafc;
+            transition: all 0.2s;
+        }
+
+        input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:active { transform: scale(0.98); }
+
+        button.add { background: var(--primary); color: white; margin-top: 6px; }
+        button.add:hover { background: var(--primary-hover); }
+
+        button.clear { background: transparent; color: var(--danger); border: 1px solid #fca5a5; margin-top: 10px; }
+        button.clear:hover { background: #fef2f2; }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            padding: 12px 8px;
+            border-radius: var(--radius);
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .metric-card p { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+        .metric-card span { font-size: 1.1rem; font-weight: 700; color: var(--text-main); display: block; margin-top: 4px; }
+
+        .history-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        ul { list-style: none; max-height: 280px; overflow-y: auto; }
+
+        li { 
+            background: #f8fafc; 
+            padding: 12px 14px; 
+            border-radius: 8px; 
+            margin-bottom: 8px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid var(--border);
+        }
+
+        .fardo-info { font-weight: 600; font-size: 0.95rem; }
+        .fardo-peso { color: var(--primary); font-weight: 700; }
+
+        .actions { display: flex; gap: 6px; }
+
+        .actions button { 
+            padding: 6px 12px; 
+            font-size: 0.8rem; 
+            width: auto; 
+            border-radius: 6px; 
+        }
+
+        .btn-edit { background: #fef3c7; color: #b45309; }
+        .btn-edit:hover { background: #fde68a; }
+
+        .btn-del { background: #fee2e2; color: #b91c1c; }
+        .btn-del:hover { background: #fca5a5; }
+
+        .empty-state { text-align: center; color: var(--text-muted); padding: 20px 0; font-size: 0.9rem; }
     </style>
 </head>
 <body>
-    <h2>Controle de Fardos de Algodão</h2>
+
+    <header>
+        <h1>Fardos de Algodão</h1>
+        <div class="status-badge">
+            <div class="status-dot"></div> Sincronizado
+        </div>
+    </header>
     
     <div class="card">
-        <label>Número do Fardo:</label>
-        <input type="number" id="numFardo" placeholder="Ex: 8490">
+        <div class="input-group">
+            <label for="numFardo">Número do Fardo</label>
+            <input type="number" id="numFardo" placeholder="Ex: 8490" inputmode="numeric">
+        </div>
         
-        <label>Peso (Kg):</label>
-        <input type="number" id="pesoInput" placeholder="Ex: 245.0" step="0.01">
+        <div class="input-group">
+            <label for="pesoInput">Peso do Fardo (Kg)</label>
+            <input type="number" id="pesoInput" placeholder="Ex: 245.0" step="0.01" inputmode="decimal">
+        </div>
         
-        <button class="add" onclick="salvarFardo()">Adicionar / Atualizar Fardo</button>
+        <button class="add" id="btnSalvar" onclick="salvarFardo()">Adicionar Fardo</button>
     </div>
 
-    <div class="results">
-        <p>Qtd. Fardos: <span id="qtd">0</span></p>
-        <p>Peso Total: <span id="total">0.00</span> kg</p>
-        <p>Média: <span id="media">0.00</span> kg</p>
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <p>Qtd. Fardos</p>
+            <span id="qtd">0</span>
+        </div>
+        <div class="metric-card">
+            <p>Peso Total</p>
+            <span id="total">0 kg</span>
+        </div>
+        <div class="metric-card">
+            <p>Média/Fardo</p>
+            <span id="media">0 kg</span>
+        </div>
     </div>
 
     <div class="card">
-        <h3>Histórico do Turno</h3>
-        <ul id="listaFardos"></ul>
+        <div class="history-title">
+            <span>Histórico do Turno</span>
+        </div>
+        <ul id="listaFardos">
+            <div class="empty-state">Nenhum fardo registrado no turno.</div>
+        </ul>
     </div>
 
     <button class="clear" onclick="limparTurno()">Zerar Turno Completo</button>
 
     <script>
-        let fardos = [];
-        let editandoIndex = null; // Guarda se estamos editando um fardo existente
+        // CONFIGURAÇÃO DO SUPABASE
+        const SUPABASE_URL = 'https://wlsqkiitnbhshtacerkv.supabase.co';
+        const SUPABASE_ANON_KEY = 'COLE_SUA_CHAVE_ANON_AQUI'; // Lembre de manter sua chave aqui!
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function salvarFardo() {
+        let fardos = [];
+        let idEditando = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            buscarFardos();
+            escutarTempoReal();
+        });
+
+        async function buscarFardos() {
+            const { data, error } = await supabaseClient
+                .from('fardos')
+                .select('*')
+                .order('id', { ascending: true });
+
+            if (error) {
+                console.error('Erro ao buscar fardos:', error);
+            } else {
+                fardos = data || [];
+                atualizarTela();
+            }
+        }
+
+        function escutarTempoReal() {
+            supabaseClient
+                .channel('public:fardos')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'fardos' }, () => {
+                    buscarFardos();
+                })
+                .subscribe();
+        }
+
+        async function salvarFardo() {
             const inputNum = document.getElementById('numFardo');
             const inputPeso = document.getElementById('pesoInput');
             
@@ -62,68 +264,92 @@
                 return;
             }
 
-            if (editandoIndex !== null) {
-                // Editando fardo existente
-                fardos[editandoIndex] = { numero, peso };
-                editandoIndex = null;
-                document.querySelector('.add').innerText = "Adicionar Fardo";
+            if (idEditando !== null) {
+                const { error } = await supabaseClient
+                    .from('fardos')
+                    .update({ numero, peso })
+                    .eq('id', idEditando);
+
+                if (error) {
+                    alert("Erro ao atualizar fardo.");
+                } else {
+                    idEditando = null;
+                    document.getElementById('btnSalvar').innerText = "Adicionar Fardo";
+                }
             } else {
-                // Adicionando novo fardo
-                fardos.push({ numero, peso });
+                const { error } = await supabaseClient
+                    .from('fardos')
+                    .insert([{ numero, peso }]);
+
+                if (error) {
+                    alert("Erro ao salvar fardo.");
+                }
             }
 
             inputNum.value = '';
             inputPeso.value = '';
             inputNum.focus();
-            atualizarTela();
         }
 
         function atualizarTela() {
             const qtd = fardos.length;
-            const total = fardos.reduce((acc, val) => acc + val.peso, 0);
+            const total = fardos.reduce((acc, val) => acc + Number(val.peso), 0);
             const media = qtd > 0 ? total / qtd : 0;
 
             document.getElementById('qtd').innerText = qtd;
-            document.getElementById('total').innerText = total.toFixed(2);
-            document.getElementById('media').innerText = media.toFixed(2);
+            document.getElementById('total').innerText = `${total.toFixed(1)} kg`;
+            document.getElementById('media').innerText = `${media.toFixed(1)} kg`;
 
             const lista = document.getElementById('listaFardos');
             lista.innerHTML = '';
 
-            fardos.forEach((fardo, index) => {
+            if (fardos.length === 0) {
+                lista.innerHTML = '<div class="empty-state">Nenhum fardo registrado no turno.</div>';
+                return;
+            }
+
+            fardos.forEach((fardo) => {
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    <span>Fardo Nº: ${fardo.numero} - ${fardo.peso}Kg</span>
+                    <div class="fardo-info">
+                        Fardo Nº ${fardo.numero} — <span class="fardo-peso">${fardo.peso} kg</span>
+                    </div>
                     <div class="actions">
-                        <button class="btn-edit" onclick="prepararEdicao(${index})">Editar</button>
-                        <button class="btn-del" onclick="removerFardo(${index})">Excluir</button>
+                        <button class="btn-edit" onclick="prepararEdicao(${fardo.id}, '${fardo.numero}', ${fardo.peso})">Editar</button>
+                        <button class="btn-del" onclick="removerFardo(${fardo.id})">Excluir</button>
                     </div>
                 `;
                 lista.appendChild(li);
             });
         }
 
-        function prepararEdicao(index) {
-            document.getElementById('numFardo').value = fardos[index].numero;
-            document.getElementById('pesoInput').value = fardos[index].peso;
-            editandoIndex = index;
-            document.querySelector('.add').innerText = "Atualizar Fardo";
+        function prepararEdicao(id, numero, peso) {
+            document.getElementById('numFardo').value = numero;
+            document.getElementById('pesoInput').value = peso;
+            idEditando = id;
+            document.getElementById('btnSalvar').innerText = "Atualizar Fardo";
             document.getElementById('pesoInput').focus();
         }
 
-        function removerFardo(index) {
+        async function removerFardo(id) {
             if (confirm("Deseja remover este fardo?")) {
-                fardos.splice(index, 1);
-                if (editandoIndex === index) editandoIndex = null;
-                atualizarTela();
+                const { error } = await supabaseClient
+                    .from('fardos')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) alert("Erro ao excluir.");
             }
         }
 
-        function limparTurno() {
-            if(confirm("Tem certeza que deseja zerar todos os fardos do turno?")) {
-                fardos = [];
-                editandoIndex = null;
-                atualizarTela();
+        async function limparTurno() {
+            if(confirm("Tem certeza que deseja apagar TODOS os fardos do turno no banco de dados?")) {
+                const { error } = await supabaseClient
+                    .from('fardos')
+                    .delete()
+                    .neq('id', 0);
+
+                if (error) alert("Erro ao limpar o turno.");
             }
         }
     </script>
